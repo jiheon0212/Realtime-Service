@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:title="Home"
+        android:id="@+id/homeGroundFragment"
+        app:showAsAction="always"
+        android:icon="@drawable/home_24px"/>
+    <item
+        android:title="Chatroom"
+        android:id="@+id/chatroomFragment"
+        app:showAsAction="always"
+        android:icon="@drawable/chat_24px"/>
+    <item
+        android:title="Match"
+        android:id="@+id/matchWaitFragment"
+        app:showAsAction="always"
+        android:icon="@drawable/captive_portal_24px"/>
+    <item
+        android:title="Mypage"
+        android:id="@+id/myPageFragment"
+        app:showAsAction="always"
+        android:icon="@drawable/account_circle_24px"/>
+</menu>
