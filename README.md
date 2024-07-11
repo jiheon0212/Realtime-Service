@@ -52,18 +52,46 @@ buildscript {
 ### 버그
 
 - Navcontroller를 통해 이동 시 뒤로가기 버튼을 클릭하면 백스택이 유지가 안되는 문제
+```
 -> onBackPressedDispatcher를 통해 필요한 navcontroller에 백스택으로 돌아가는 callback을 등록해준다. - 완료
-
+```
 - Onresume에 등록해놓은 userStatus 변경 코드가 다른 container가 동작 중에도 같이 동작해 online으로 표기되는 문제
+```
 -> userStatus 변경을 처리하는 fragment의 container가 view.visible 상태일 때만 동작하도록 boolean 반환 메서드를 추가로 등록해 해당 container에서만 동작하도록 변경 - 완료
-
+```
 - 채팅방에 1대1 대화 시, 서로 같은 유저에게 보내는 채팅이 각각의 이름으로 채팅방을 두개 형성하는 문제
+```
 -> 채팅방 Id를 하나로 생성하는 방법 찾기
 -> 채팅방 Id를 반환해주는 메서드에 양쪽 uid 문자열의 크기를 비교하여 큰 쪽이 항상 앞으로 오도록 조건문을 추가해 항상 같은 채팅방 Id를 사용할 수 있도록 변경 - 완료 
-
+```
 - 1대1 대화창에서 메세지를 전송하고 갱신될 때는 포커스가 최하단에 잘 맞춰지지만 키보드가 내려가면서 최하단에 있던 포커스도 같이 사라지는 문제
+```
 -> recycler view에 delay를 주어 실행하면 해결되지만 ui에 별로 좋지 못한거 같아 다른 방법 찾기
 -> recycler view는 자체적으로 스크롤이 가능했다... scroll view로 감싸주었던 것이 동작 에러의 원인으로 제거하니 포커스가 잘 유지된다.
+```
+- 내가 포함되지않은 채팅방 목록이 호출되는 문제
+```
+-> if (it.key?.contains(auth.uid!!)!!)를 view model에 추가해 현재 사용자의 Uid가 포함된 경우에만 가져오도록 변경 - 완료
+```
+
+- 2명 이상일 경우 매칭시스템이 동작하는 방식으로 진행하면 3번째 혹은 4번째 플레이어가 리스트에 담기기 전에 실행되어 데이터가 누락되는 문제
+```
+-> callback 혹은 coroutine을 통해 작업완료 후 매칭시스템이 동작할 수 있는 순서를 보장받는 방식이 필요하다.
+CoroutineScope(Dispatchers.IO).launch {
+                status.forEach {
+                    if (it.status == "online") {
+                        onlinePlayers.add(it.user!!)
+                    }
+                }
+                // 변경된 각각의 데이터에 대해 online인 유저가 2명 이상일 때 searchMatch 메서드가 동작하도록 구현
+                if (onlinePlayers.size >= 2) {
+                    searchMatch(onlinePlayers)
+                }
+                // onlinePlayers를 랜덤에 전달한 후에 초기화 시켜준다
+                onlinePlayers.clear()
+            }
+-> coroutine을 통해 순차성을 확보해 정상 작동됨 - 완료
+```
 
 ### 배운 점
 
