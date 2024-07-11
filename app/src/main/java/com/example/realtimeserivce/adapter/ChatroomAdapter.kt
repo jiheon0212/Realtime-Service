@@ -14,7 +14,6 @@ class ChatroomAdapter(private val onItemClick: (String) -> Unit): RecyclerView.A
             binding.root.setOnClickListener {
                 if (adapterPosition != RecyclerView.NO_POSITION) {
                     val uid = chatroomList[adapterPosition].visibleName
-                    Log.d("visibleName", uid)
                     onItemClick(uid)
                 }
             }

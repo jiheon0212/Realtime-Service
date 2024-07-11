@@ -27,12 +27,14 @@ class ChatroomViewModel: ViewModel() {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val chatroom = mutableListOf<ChatroomId>()
                 snapshot.children.forEach {
-                    val chatroomId = it.key!!
-                    val myRoomId = chatroomId.replace(auth.uid!!, "")
-                    if (myRoomId != "") {
-                        chatroom.add(ChatroomId(chatroomId, myRoomId))
-                    } else {
-                        chatroom.add(ChatroomId(chatroomId, auth.uid!!))
+                    if (it.key?.contains(auth.uid!!)!!) {
+                        val chatroomId = it.key!!
+                        val myRoomId = chatroomId.replace(auth.uid!!, "")
+                        if (myRoomId != "") {
+                            chatroom.add(ChatroomId(chatroomId, myRoomId))
+                        } else {
+                            chatroom.add(ChatroomId(chatroomId, auth.uid!!))
+                        }
                     }
                 }
                 _roomId.postValue(chatroom)

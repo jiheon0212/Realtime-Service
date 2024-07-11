@@ -13,9 +13,6 @@
         <action
             android:id="@+id/action_homeGroundFragment_to_messageFragment"
             app:destination="@id/messageFragment">
-            <argument
-                android:name="uid"
-                app:argType="string" />
         </action>
     </fragment>
 
@@ -55,5 +52,9 @@
         android:id="@+id/matchFragment"
         android:name="com.example.realtimeserivce.ui.match.MatchFragment"
         android:label="fragment_match"
-        tools:layout="@layout/fragment_match" />
+        tools:layout="@layout/fragment_match">
+        <argument
+            android:name="id"
+            app:argType="string" />
+    </fragment>
 </navigation>
