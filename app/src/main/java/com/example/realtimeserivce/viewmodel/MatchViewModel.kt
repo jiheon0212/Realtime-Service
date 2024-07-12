@@ -18,6 +18,7 @@ import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.database
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -32,17 +33,15 @@ class MatchViewModel: ViewModel() {
     private val _word = MutableLiveData<MutableList<MatchWord>>()
     val word: LiveData<MutableList<MatchWord>> get() = _word
 
-    private val _playerStatus = MutableLiveData<MutableList<CurrentStatus>>()
-    val playerStatus: LiveData<MutableList<CurrentStatus>> get() = _playerStatus
-
-    init {
-        getPlayerStatus()
-    }
+    private val _isMatchExists = MutableLiveData<Boolean>()
+    val isMatchExists: LiveData<Boolean> get() = _isMatchExists
 
     // todo - 승리, 패배를 현재 날짜를 기준으로 기록해주는 메서드
     fun writeResults(result: MatchResult) {
         database.child("match_records").child(getCurrentDay()).push().setValue(result)
     }
+    
+    // 현재 날짜를 반환해주는 메서드
     private fun getCurrentDay(): String {
         val currentDate = Date()
         val currentZone = TimeZone.getTimeZone("Asia/Seoul")
@@ -52,6 +51,31 @@ class MatchViewModel: ViewModel() {
         val dayValue = dayFormat.format(currentDate)
 
         return dayValue
+    }
+
+    // 현재 match를 db에서 제거하고 플레이어들을 모두 이탈시키는 메서드
+    fun destroyMatch(matchId: String) {
+        database.child("match_rooms").child(matchId).removeValue()
+    }
+    // 현재 match가 끝났는지 db 값을 감지하는 메서드
+    fun observeMatchDestroy(matchId: String) {
+        database.child("match_rooms").addValueEventListener(object: ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                var searchMatch = false
+                snapshot.children.forEach { dataSnapshot ->
+                    val value = dataSnapshot.key!!
+                    if (value == matchId) {
+                        searchMatch = true
+                        _isMatchExists.postValue(true)
+                        return
+                    }
+                }
+                if (!searchMatch) {
+                    _isMatchExists.postValue(false)
+                }
+            }
+            override fun onCancelled(error: DatabaseError) {}
+        })
     }
 
     // 단어 Api 필터를 통과한 Word를 database로 전송하는 메서드
@@ -81,35 +105,15 @@ class MatchViewModel: ViewModel() {
             })
     }
 
-    // user의 대기열 접속 상태를 변경하는 메서드
-    fun setReadyStatus(isOnline: Boolean) {
-        if (auth.uid != null) {
-            val userRef = database.child("player_list/${auth.uid}")
-            userRef.setValue(if (isOnline) CurrentStatus(auth.uid!!, "online") else CurrentStatus(auth.uid!!, "offline"))
-        } else {
-            return
-        }
-    }
-
-    // 전체 player들의 대기 상태를 가져오는 메서드
-    private fun getPlayerStatus() {
-        database.child("player_list").addValueEventListener(object: ValueEventListener {
-            override fun onDataChange(dataSnapshot: DataSnapshot) {
-                val statusList = mutableListOf<CurrentStatus>()
-                dataSnapshot.children.forEach { snapshot ->
-                    val data = snapshot.getValue(CurrentStatus::class.java)!!
-                    statusList.add(data)
-                }
-                _playerStatus.postValue(statusList)
-            }
-            override fun onCancelled(databaseError: DatabaseError) {}
-        })
-    }
-
     // 단어가 api를 거쳐 필터링 되어 실패 성공 여부에 따라 비동기로 값을 반환
     suspend fun checkWord(word: String): String {
         return withContext(Dispatchers.IO){
             model.checkWord(word)
         }
+    }
+
+    // match를 생성하는 메서드
+    fun setMatch(matchId: String) {
+        database.child("match_rooms").child(matchId).setValue("started")
     }
 }

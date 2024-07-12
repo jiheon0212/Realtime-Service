@@ -13,6 +13,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.realtimeserivce.adapter.MatchAdapter
@@ -24,9 +25,13 @@ import com.example.realtimeserivce.ency.EncyService
 import com.example.realtimeserivce.ency.NaverInformation
 import com.example.realtimeserivce.ui.main.MessageFragmentArgs
 import com.example.realtimeserivce.viewmodel.MatchViewModel
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import retrofit2.Call
 import retrofit2.Response
 
@@ -34,6 +39,7 @@ class MatchFragment : Fragment() {
     private lateinit var fragmentMatchBinding: FragmentMatchBinding
     private val viewModel: MatchViewModel by viewModels()
     private val args: MatchFragmentArgs by navArgs()
+    private val auth = Firebase.auth
     private lateinit var timer: Timer
     private lateinit var matchAdapter: MatchAdapter
 
@@ -42,6 +48,7 @@ class MatchFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         fragmentMatchBinding = FragmentMatchBinding.inflate(layoutInflater, container, false)
+        viewModel.setMatch(args.id)
         matchAdapter = MatchAdapter(mutableListOf())
         timer = Timer()
         val wordInput = fragmentMatchBinding.etMatch
@@ -72,12 +79,15 @@ class MatchFragment : Fragment() {
                 CoroutineScope(Dispatchers.Main).launch {
                     val result = viewModel.checkWord(sendValue)
                     if (result != "failed") {
-                        // result를 database에 등록시켜준다.
                         // todo - 다음 플레이어 턴을 진행시킨다.
+                        // result를 database에 등록시켜준다.
                         viewModel.sendFilterWord(result, args.id)
                     } else {
-                        // todo - test code
-                        viewModel.sendFilterWord(result, args.id)
+                        withContext(Dispatchers.Main) {
+                            // todo - 승리/패배화면 호출하기 -> 승리/패배 기록 메서드 호출하기
+                            delay(2500)
+                            viewModel.destroyMatch(args.id)
+                        }
                     }
                 }
             }
@@ -94,10 +104,24 @@ class MatchFragment : Fragment() {
     }
 
     // todo - 사용자의 턴 구분 메서드
-    private fun isMyTurn(): Boolean {
+    private fun isMyTurn(myTurn: Boolean) {
         // todo - 매칭Id의 앞에 있는 user uid의 턴부터 시작한다.
-        return true
+        if (myTurn) {
+            fragmentMatchBinding.etMatch.isEnabled = true
+        } else {
+            fragmentMatchBinding.etMatch.isEnabled = false
+        }
     }
+
+    // todo - 승리/패배 화면 호출하는 메서드
+    private fun showResults(winner: String) {
+        if (winner == auth.uid!!) {
+            // 승리 시, 화면 bottom sheet or dialog로 구성하기
+        } else {
+            
+        }
+    }
+    
     // 타이머 작동 메서드
     @SuppressLint("SetTextI18n")
     private fun startTimer(wordInput: EditText, limit: TextView) {
@@ -110,27 +134,44 @@ class MatchFragment : Fragment() {
             },
             onFinish = {
                 // 타이머 종료 시 패배로 기록되며, 입력 초기화 및 게임 종료 단계를 동작시켜준다.
-                wordInput.setText("")
-                wordInput.isEnabled = false
-                limit.text = "End"
+                CoroutineScope(Dispatchers.Main).launch{
+                    wordInput.setText("")
+                    wordInput.isEnabled = false
+                    limit.text = "End"
 
-                /* todo - 게임 결과 기록 & 대기 창으로 이동
-                    viewModel.writeResults(MatchResult("",""))
-                    moveToWait() */
-
-                // todo - test용 code 삭제 예정
-                fragmentMatchBinding.btnMatchStart.visibility = View.VISIBLE
-                fragmentMatchBinding.tvTimeLeft.visibility = View.GONE
+                    // todo - 승리/패배화면 호출하기 -> 승리/패배 기록 메서드 호출하기
+                    delay(2500)
+                    viewModel.destroyMatch(args.id)
+                }
             }
         )
     }
-    // todo - 종료 후, 매치 대기열 화면으로 이동하는 메서드
+    // 종료 후, 매치 대기열 화면으로 이동하는 메서드
     private fun moveToWait() {
-
+        findNavController().popBackStack()
     }
 
     private fun hideKeyboard(view: View) {
         val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         imm.hideSoftInputFromWindow(view.windowToken, 0)
+    }
+
+    override fun onStop() {
+        super.onStop()
+        // match fragment가 화면에 보이지않으면 matchId를 삭제 후 match wait fragment로 이동
+        viewModel.destroyMatch(args.id)
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        viewModel.observeMatchDestroy(args.id)
+        // 해당 match id를 감지해 match가 사라지게되면 match wait fragment로 이동하도록 구현
+        viewModel.isMatchExists.observe(viewLifecycleOwner) { onMatch ->
+            if (onMatch) {
+                return@observe
+            } else {
+                moveToWait()
+            }
+        }
     }
 }
