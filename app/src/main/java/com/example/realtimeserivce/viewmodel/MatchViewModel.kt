@@ -3,6 +3,8 @@ package com.example.realtimeserivce.viewmodel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.realtimeserivce.data.ChatroomId
 import com.example.realtimeserivce.data.CurrentStatus
 import com.example.realtimeserivce.data.MatchResult
 import com.example.realtimeserivce.data.MatchWord
@@ -14,6 +16,9 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.database
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -29,6 +34,7 @@ class MatchViewModel: ViewModel() {
 
     private val _playerStatus = MutableLiveData<MutableList<CurrentStatus>>()
     val playerStatus: LiveData<MutableList<CurrentStatus>> get() = _playerStatus
+
     init {
         getPlayerStatus()
     }
@@ -100,8 +106,10 @@ class MatchViewModel: ViewModel() {
         })
     }
 
-    // 단어가 api를 거쳐 필터링 되어 실패 성공 여부를 반환
-    fun checkWord(word: String) {
-        val result = model.checkWord(word)
+    // 단어가 api를 거쳐 필터링 되어 실패 성공 여부에 따라 비동기로 값을 반환
+    suspend fun checkWord(word: String): String {
+        return withContext(Dispatchers.IO){
+            model.checkWord(word)
+        }
     }
 }

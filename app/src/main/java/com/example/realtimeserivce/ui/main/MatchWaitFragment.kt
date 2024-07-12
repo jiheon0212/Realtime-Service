@@ -13,6 +13,9 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.realtimeserivce.adapter.StatusAdapter
 import com.example.realtimeserivce.databinding.FragmentMatchWaitBinding
 import com.example.realtimeserivce.viewmodel.MatchViewModel
+import com.example.realtimeserivce.viewmodel.WaitViewModel
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -20,7 +23,9 @@ import kotlin.random.Random
 
 class MatchWaitFragment : Fragment() {
     private lateinit var fragmentMatchWaitBinding: FragmentMatchWaitBinding
+    private val auth = Firebase.auth
     private val viewModel: MatchViewModel by viewModels()
+    private val waitModel: WaitViewModel by viewModels()
     private lateinit var statusAdapter: StatusAdapter
     private val onlinePlayers = mutableListOf<String>()
 
@@ -55,6 +60,15 @@ class MatchWaitFragment : Fragment() {
             LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
 
         matchToggle()
+
+        // 현재 사용자의 uid가 포함된 방이 개설되면 해당 항목을 통해 onMatchFound 메서드를 작동시킨다.
+        waitModel.matchRoomIds.observe(viewLifecycleOwner) {
+            it.forEach { matchId ->
+                if (matchId.contains(auth.uid!!)) {
+                    onMatchFound(matchId)
+                }
+            }
+        }
 
         return fragmentMatchWaitBinding.root
     }

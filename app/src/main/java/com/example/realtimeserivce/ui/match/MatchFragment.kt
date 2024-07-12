@@ -24,6 +24,9 @@ import com.example.realtimeserivce.ency.EncyService
 import com.example.realtimeserivce.ency.NaverInformation
 import com.example.realtimeserivce.ui.main.MessageFragmentArgs
 import com.example.realtimeserivce.viewmodel.MatchViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import retrofit2.Call
 import retrofit2.Response
 
@@ -65,21 +68,23 @@ class MatchFragment : Fragment() {
             } else {
                 fragmentMatchBinding.etMatch.setText("")
                 hideKeyboard(it)
-                // todo - result, failed 반환 받기 checkword 메서드는 비동기 함수 -> 코루틴으로 처리
-                // todo - result 수정해야됨
-                val result: String = viewModel.checkWord(sendValue).toString()
-                if (result != "failed") {
-                    // result를 database에 등록시켜준다.
-                    // todo - 다음 플레이어 턴을 진행시킨다.
-                    viewModel.sendFilterWord(result, args.id)
-                } else {
-                    /* todo - 게임 결과 기록 & 대기 창으로 이동
-                        viewModel.writeResults(MatchResult("",""))
-                        moveToWait() */
+                // result, failed 반환 받기 checkword 메서드는 비동기 함수 -> 코루틴으로 처리
+                CoroutineScope(Dispatchers.Main).launch {
+                    val result = viewModel.checkWord(sendValue)
+                    if (result != "failed") {
+                        // result를 database에 등록시켜준다.
+                        // todo - 다음 플레이어 턴을 진행시킨다.
+                        viewModel.sendFilterWord(result, args.id)
+                    } else {
+                        // todo - test code
+                        viewModel.sendFilterWord(result, args.id)
+                    }
                 }
             }
         }
 
+        // 해당 matchid에 포함된 단어에 변경사항이 생기면 word (livedata)를 통해 전달해 뷰에 호출한다.
+        viewModel.wordListChange(args.id)
         viewModel.word.observe(viewLifecycleOwner) {
             matchAdapter.fetchWords(it)
             fragmentMatchBinding.matchRecycler.scrollToPosition(it.size - 1)
