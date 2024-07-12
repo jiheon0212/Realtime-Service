@@ -97,3 +97,5 @@ CoroutineScope(Dispatchers.IO).launch {
 
 - fragment의 필요성에 따라 Bottom Navigation의 가시성을 조정하는 방법
 - adapter에 생성자에 콜백 메서드를 두어 viewholder 터치 이벤트를 adapter를 사용하는 fragment에서 처리하는 방법
+- retrofit2에서 coroutine을 통해 결과 값을 반환받는 방법
+- coroutine을 통해 io 스레드에서 네트워크 처리를 진행하여 결과를 main 스레드로 가져와 순차성을 확보하는 방법
