@@ -98,7 +98,7 @@ class MatchWaitFragment : Fragment() {
             randomPlayerPair.add(onlinePlayers[randomIndex])
             onlinePlayers.removeAt(randomIndex)
         }
-        val matchRoomId = randomPlayerPair.sortedDescending().joinToString(separator = ",")
+        val matchRoomId = randomPlayerPair.sortedDescending().joinToString("")
         onMatchFound(matchRoomId)
     }
     // 매칭 성사 시, 매치 화면을 호출하는 메서드

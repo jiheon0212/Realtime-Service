@@ -3,12 +3,8 @@ package com.example.realtimeserivce.viewmodel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import com.example.realtimeserivce.data.ChatroomId
-import com.example.realtimeserivce.data.CurrentStatus
 import com.example.realtimeserivce.data.MatchResult
 import com.example.realtimeserivce.data.MatchWord
-import com.example.realtimeserivce.data.Message
 import com.example.realtimeserivce.repository.MatchModel
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
@@ -17,8 +13,6 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.database
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -36,8 +30,11 @@ class MatchViewModel: ViewModel() {
     private val _isMatchExists = MutableLiveData<Boolean>()
     val isMatchExists: LiveData<Boolean> get() = _isMatchExists
 
-    // todo - 승리, 패배를 현재 날짜를 기준으로 기록해주는 메서드
-    fun writeResults(result: MatchResult) {
+    // 승리, 패배를 현재 날짜를 기준으로 기록해주는 메서드
+    fun writeResults(loser: String, matchId: String) {
+        val winner = matchId.replace(loser, "")
+        val result = MatchResult(winner, loser)
+
         database.child("match_records").child(getCurrentDay()).push().setValue(result)
     }
     

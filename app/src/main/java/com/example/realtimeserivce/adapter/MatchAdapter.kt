@@ -5,8 +5,8 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.example.realtimeserivce.data.MatchWord
-import com.example.realtimeserivce.databinding.PrivateChatReceiverBinding
-import com.example.realtimeserivce.databinding.PrivateChatSenderBinding
+import com.example.realtimeserivce.databinding.MatchReceiverBinding
+import com.example.realtimeserivce.databinding.MatchSenderBinding
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 
@@ -21,12 +21,12 @@ class MatchAdapter(private var words: MutableList<MatchWord>): RecyclerView.Adap
         notifyDataSetChanged()
     }
 
-    inner class SenderViewHolder(val binding: PrivateChatSenderBinding): RecyclerView.ViewHolder(binding.root)
-    inner class ReceiverViewHolder(val binding: PrivateChatReceiverBinding): RecyclerView.ViewHolder(binding.root)
+    inner class SenderViewHolder(val binding: MatchSenderBinding): RecyclerView.ViewHolder(binding.root)
+    inner class ReceiverViewHolder(val binding: MatchReceiverBinding): RecyclerView.ViewHolder(binding.root)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-        val sender = PrivateChatSenderBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-        val receiver = PrivateChatReceiverBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        val sender = MatchSenderBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        val receiver = MatchReceiverBinding.inflate(LayoutInflater.from(parent.context), parent, false)
 
         return if (viewType == VIEW_TYPE_SEND) {
             SenderViewHolder(sender)
@@ -42,13 +42,11 @@ class MatchAdapter(private var words: MutableList<MatchWord>): RecyclerView.Adap
             (holder as SenderViewHolder).binding.apply {
                 tvUser.text = sender
                 tvMessage.text = value
-                tvCurrentTime.text = null
             }
         } else {
             (holder as ReceiverViewHolder).binding.apply {
                 tvUser.text = sender
                 tvMessage.text = value
-                tvCurrentTime.text = null
             }
         }
     }

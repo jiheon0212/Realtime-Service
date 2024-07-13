@@ -24,7 +24,7 @@ class MatchModel {
             val result = ency.items[0].trimResults
             val isMatch = if (result.first.contains(word)) word else ""
             if (isMatch.isNotEmpty()) {
-                return@withContext "$isMatch:\n${result.second}"
+                return@withContext "$isMatch: ${result.second}"
             } else {
                 return@withContext "failed"
             }
