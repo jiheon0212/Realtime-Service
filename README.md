@@ -103,6 +103,11 @@ CoroutineScope(Dispatchers.IO).launch {
             }
 -> coroutine을 통해 순차성을 확보해 정상 작동됨 - 완료
 ```
+- 내 uid로 matchId 개설 시, match fragment로 이동하는 코드 때문에 방이 개설되어있으면 화면이 match fragment로 고정됨
+```
+-> 뒤로가기 버튼이나 매치 포기버튼, 상대방이나 내가 화면 이탈 시, 해당 MatchId를 삭제하는 기능이 필요하다. - 완료
+-> 플레이어의 매치 대기상태가 online일 경우에만 코드가 작동되도록 구현한다. -> btn의 상태가 ready가 아니면 플레이어가 속한 match에 입장할 수 있도록 변경 - 완료
+```
 
 ### 배운 점
 
